@@ -1,0 +1,107 @@
+# Below default values are collected. If the defaults are empty or read "default",
+# the must be overwritten for the training service to work properly
+DEPENDENCIES:
+  orchestrationTime:
+    xsuaa:
+      version: ""
+      repository: ""
+      stdAppName: "${module.xsuaa_std.cf_svc_xsuaa-credentials[\"xsappname\"]}"
+      intAppName: "${module.xsuaa_int.cf_svc_xsuaa-credentials[\"xsappname\"]}"
+      gdprAppName: "${module.xsuaa_gdpr.cf_svc_xsuaa-credentials[\"xsappname\"]}"
+      resourceplanClientId: "${module.xsuaa_resourceplan.cf_svc_xsuaa-credentials[\"clientid\"]}"
+      resourceplanClientSecret: "${module.xsuaa_resourceplan.cf_svc_xsuaa-credentials[\"clientsecret\"]}"
+      resourceplanBaseUrl: "${module.xsuaa_resourceplan.cf_svc_xsuaa-credentials[\"url\"]}"
+    jwt:
+      version: ""
+      repository: ""
+    resourceplan:
+      version: "latest"
+      repository: "github.wdf.sap.corp/ICN-ML/mlf-resourceplan-service"
+      endpoint: "${module.mlfresourceplan_api.service_endpoint}"
+    dataSizeChecker:
+      version: 0.1.0
+      repository: "https://github.wdf.sap.corp/ICN-ML/training-data-size-checker"
+      image: "training-data-size-checker"
+    nfsServer:
+      version: "latest"
+      repository: "github.wdf.sap.corp/ICN-ML/staging"
+      hostName: "${module.aws_efs_training_api.aws_efs_dns_name}"
+
+CICDOUTPUT:
+  service_endpoint: training
+  app_training_api-version: 
+    file: "deployment-training-service.yaml"
+    key: "version"
+
+nfsServer:
+  hostPath: "/"
+
+trainingService:
+# Operator settings
+  hpaMaxReplicas: {{ .hpaMaxReplicas }}
+  hpaMinReplicas: {{ .hpaMinReplicas }}
+  tenantNamespacePrefix: "ts-"
+  usePrefixInHash: "False"
+  # 1TB (not TiB!), a string since helm would write it in scientific notation which can't be parsed by int() in python.
+  fileSystemQuotaTenantBytes: "1000000000000"
+  tenantJobSubmissionLimitEnabled: False
+  tenantGpuJobSubmissionMaxSubmissions: 5
+  tenantCpuJobSubmissionMaxSubmissions: 20
+  enableDynamicVolumeProvisioning: False
+  useMinio: True
+  enableV2API: True
+  enableV3API: False
+  mockDataLake: False
+  jobVolumeQuota: "200Gi"
+  minioClientTimeout: 5.0
+  minioClientRetries: 3
+  minioIngressController: {{ .minioIngressController }}
+  nginx:
+    replicas: 1
+  rbacEnabled: True
+  rbacClusterRole: True
+  debug: False
+  jobDockerRegistry:
+    host: "mlf.docker.repositories.sap.ondemand.com"
+    port: ""
+    user: "${secret[docker/foundation-registry][username]}"
+    password: "${secret[docker/foundation-registry][password]}"
+    password_is_json: False
+
+# General configs (usually these don't change per environment)
+  image: com.sap.mlf/training-service
+  artifactManagement:
+    image: com.sap.mlf.training-service/artifact-management
+  featureHelmTemplates: False
+  imagePullPolicy: IfNotPresent
+  enableProxy: False
+  enableImageChecking: True
+  enableScopeChecking: True
+  enableFileSystemQuotaTenantCheck: True
+  imageWhitelist: '^(com\.sap\.mlf\/\S*|tensorflow\/tensorflow\:\S*|ml-foundation\/(keras|sklearn|tensorflow|mlb|cuda90|turicreate)\S*|kaixhin\/cuda-lasagne\:8\.0)$'
+  env:
+    nvidiaDriversHostPath: {{ .env.nvidiaDriversHostPath }}
+    nvidiaDriversMountPath: /usr/local/nvidia
+    trainingLdLibraryPath: /usr/local/nvidia/lib64
+  subdomainDelimiter: "."
+  sslSecretName:
+    trainingService: "training-service-ingress-secret"
+    minio: "minio-ingress-secret"
+  nodeSelectorHack: False
+  proxyServer: ""
+  noProxy: ""
+  resourceRequests:
+    maxCpus: 3
+    maxGpus: 1
+    maxMemoryMb: 62464
+  showIndex: False
+  verifyIAT: False
+  failureThreshold: 3
+  periodSeconds: 5
+  livenessProbePath: /healthz
+  readinessProbePath: /healthz
+  influx:
+    user: admin
+    databaseName: k8s
+  prometheus:
+    domainName: http://prometheus-operator-prometheus.monitoring:9090

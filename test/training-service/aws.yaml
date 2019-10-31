@@ -1,0 +1,7 @@
+trainingService:
+  minioIngressController: True
+  hpaMaxReplicas: 10
+  hpaMinReplicas: 2
+  # in all AWS deployments, the nvidia driver can be found here
+  env:
+    nvidiaDriversHostPath: /var/lib/nvidia-docker/volumes/nvidia_driver/latest

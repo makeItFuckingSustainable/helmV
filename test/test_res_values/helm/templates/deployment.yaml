@@ -1,0 +1,61 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Chart.Name }}
+    version: {{ .Chart.Version }}
+    # Problem that the below does not work
+
+    # this only works as below for maps
+    {{ range $k, $v := .Values.t5.t51 -}}
+    {{ printf "%s: %s" $k $v }}
+    {{ end }}
+    # this only works as below for slices
+    {{ range $_, $v := .Values.t6 -}}
+    {{ $v }}
+    {{ end }}
+    map: {{ .Values.t7 }}
+spec:
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}
+    spec:
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      containers:
+      - name: {{ .Chart.Name }}
+        image: {{ printf "%s:%s" .Chart.Name  .Chart.Version }}
+        # imagePullPolicy must be Never or IfNotPresent to work in minikube
+        imagePullPolicy: IfNotPresent
+        resources:
+          limits:
+            cpu: 100m
+            memory: 10Mi
+          requests:
+            cpu: 10m
+            memory: 1Mi
+        ports:
+        - containerPort: {{ .Values.port }}
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: {{ .Values.port }}
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: {{ .Values.port }}
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 10

@@ -1,0 +1,4 @@
+t1: '{{ printf "%s" .k2 }}'
+t2: '{{ .t1 }}{{ .t1 }}'
+t3: '{{ .t1 }}{{ .t1 }} bla'
+normal: value

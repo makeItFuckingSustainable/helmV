@@ -1,0 +1,10 @@
+k2: world
+t1: hello-world
+t2: hello-worldhello-world
+t3: hello-worldhello-world bla
+v4:
+	v41: test
+t4: {v41: test}
+t5:
+  t51: {v41: test}
+normal: value

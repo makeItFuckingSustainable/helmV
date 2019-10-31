@@ -1,0 +1,34 @@
+k1: v1
+k2: v2
+k3:
+  k31: v31
+  k32:
+    k321: v321
+    k322:
+    - s3221
+    - s3222
+    k323: |-
+      bla
+      blub
+normal: value
+t1: v2
+t2: v2v2
+t3: v2v2v2 bla
+t4: map[v41:test]
+t5:
+  t51: {v41: test, v2: 2ndVal}
+t6: [slice0, slice1]
+t7: map[v61:[slice0 slice1]]
+v4:
+  v41: test
+v5:
+- slice0
+- slice1
+v6:
+  v61:
+  - slice0
+  - slice1
+test:
+  k: v
+  kk: vv
+  kkk: vvv

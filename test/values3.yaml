@@ -1,0 +1,19 @@
+t1: {{ printf "%s" .k2 }}
+t2: {{ .t1 }}{{ .t1 }}
+t3: {{ .t1 }}{{ .t2 }} bla
+v4:
+  v41: test
+t4: {{ .v4 }}
+t5:
+  t51: {{ .t4 }}
+v5:
+- slice0
+- slice1
+t6: {{ .v6 }}
+v6:
+  v61:
+  - slice0
+  - slice1
+t7: {{ .v6 }}
+t8: {{ .k3 }}
+normal: value
