@@ -1,9 +1,10 @@
-package process
+package yamltmpl
 
 import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"helmV/internal/debug"
 	"regexp"
 )
 
@@ -11,7 +12,7 @@ var keyIsTmpl = regexp.MustCompile(`({{.*}}.*:.*)`)
 var valIsTmpl = regexp.MustCompile(`(\w*: )({{.*}}.*)`)
 var sanTmpl = regexp.MustCompile("(\\w*: )'({{.*}}.*)'")
 
-func (i *input) Sanitize(input []byte) ([]byte, error) {
+func Sanitize(input []byte, debug debug.Debugger) ([]byte, error) {
 	res := make([]byte, 0)
 	scanner := bufio.NewScanner(bytes.NewBuffer(input))
 	for scanner.Scan() {
@@ -24,8 +25,8 @@ func (i *input) Sanitize(input []byte) ([]byte, error) {
 		// stringify all occurances of template inputs
 		matchTmpl := valIsTmpl.ReplaceAll(line, []byte("${1}'${2}'"))
 		matchTmpl = append(matchTmpl, '\n')
-		if i.debug {
-			if _, err := i.debugger.Write(matchTmpl); err != nil {
+		if debug.DoDebug() {
+			if err := debug.Write(matchTmpl); err != nil {
 				return []byte{}, err
 			}
 		}
@@ -37,7 +38,7 @@ func (i *input) Sanitize(input []byte) ([]byte, error) {
 	return res[:len(res)-1], nil
 }
 
-func (i *input) Desanitize(input []byte) ([]byte, error) {
+func Desanitize(input []byte, debug debug.Debugger) ([]byte, error) {
 	res := make([]byte, 0)
 	scanner := bufio.NewScanner(bytes.NewBuffer(input))
 	for scanner.Scan() {
@@ -45,8 +46,8 @@ func (i *input) Desanitize(input []byte) ([]byte, error) {
 		// revert stringification of all template inputs
 		matchTmpl := sanTmpl.ReplaceAll(line, []byte("${1}${2}"))
 		matchTmpl = append(matchTmpl, '\n')
-		if i.debug {
-			if _, err := i.debugger.Write(matchTmpl); err != nil {
+		if debug.DoDebug() {
+			if err := debug.Write(matchTmpl); err != nil {
 				return []byte{}, err
 			}
 		}

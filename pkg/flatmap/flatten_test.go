@@ -2,7 +2,7 @@ package flatmap_test
 
 import (
 	"fmt"
-	"hval/pkg/flatmap"
+	"helmV/pkg/flatmap"
 	"reflect"
 	"testing"
 )

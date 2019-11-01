@@ -1,9 +1,10 @@
-package process_test
+package yamltmpl_test
 
 import (
 	"bytes"
 	"fmt"
-	"hval/internal/process"
+	"helmV/internal/debug"
+	"helmV/internal/yamltmpl"
 	"strings"
 	"testing"
 )
@@ -47,10 +48,10 @@ normal: value`,
 func TestSanitize(t *testing.T) {
 	for _, test := range testValues {
 		debugSan := new(bytes.Buffer)
-		v := process.New(debugSan, true)
+		d := debug.New(debugSan, true)
 		debugDesan := new(bytes.Buffer)
-		vOut := process.New(debugDesan, true)
-		res, err := v.Sanitize([]byte(test.deSanitized))
+		dOut := debug.New(debugDesan, true)
+		res, err := yamltmpl.Sanitize([]byte(test.deSanitized), d)
 		if err != test.errSan {
 			if err.Error() != test.errSan.Error() {
 				t.Error(errOutput("error", err.Error(), test.errSan.Error()))
@@ -68,7 +69,7 @@ func TestSanitize(t *testing.T) {
 			}
 		}
 
-		resDesan, err := vOut.Desanitize([]byte(test.sanitized))
+		resDesan, err := yamltmpl.Desanitize([]byte(test.sanitized), dOut)
 		if err != test.errDesan {
 			if err.Error() != test.errDesan.Error() {
 				t.Error(errOutput("error", err.Error(), test.errDesan.Error()))

@@ -1,4 +1,4 @@
-module hval
+module helmV
 
 go 1.13
 
