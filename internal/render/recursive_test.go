@@ -1,89 +1,198 @@
-package render
+package render_test
 
 import (
+	"bytes"
 	"fmt"
-	"log"
+	"helmV/internal/render"
+	"helmV/pkg/flatmap"
 	"testing"
-
-	"gopkg.in/yaml.v2"
 )
 
-var testTmpl = `
+var testValues = []struct {
+	name   string
+	tmpl   string
+	values interface{}
+	maxIt  uint
+	res    string
+	err    error
+}{
+	{
+		name: "no templating",
+		tmpl: `
+k2: world
+normal: value
+`,
+		values: flatmap.YamlMap{},
+		maxIt:  10,
+		res: `
+k2: world
+normal: value
+`,
+		err: nil,
+	},
+	{
+		name: "recursive templating",
+		tmpl: `
 k2: world
 t1: {{ printf "hello-%s" .k2 }}
 t2: {{ .t1 }}{{ .t1 }}
 t3: {{ .t2 }} bla
+`,
+		values: flatmap.YamlMap{
+			"k2": "world",
+			"t1": `{{ printf "hello-%s" .k2 }}`,
+			"t2": `{{ .t1 }}{{ .t1 }}`,
+			"t3": `{{ .t2 }} bla`,
+		},
+		maxIt: 10,
+		res: `
+k2: world
+t1: hello-world
+t2: hello-worldhello-world
+t3: hello-worldhello-world bla
+`,
+		err: nil,
+	},
+	{
+		name: "nested map insertion",
+		tmpl: `
 v4:
-  v41: test
-v5:
-  v51:
-  - s1
-  - s2
+	v41: test
+t4: {{ .v4 }}
+`,
+		values: flatmap.YamlMap{
+			"v4": flatmap.YamlMap{"v41": "test"},
+			"t4": `{{ .v4 }}`,
+		},
+		maxIt: 10,
+		res: `
+v4:
+	v41: test
+t4: {v41: test}
+`,
+		err: nil,
+	},
+	{
+		name: "recursive nested map insertion",
+		tmpl: `
+v4:
+	v41: test
 t4: {{ .v4 }}
 t5:
-  t51: {{ .t4 }}
+	t51: {{ .t4 }}
 t6: {{ .t5.t51 }}
-t7: {{ .v5 }}
 normal: value
-`
-
-type myMap map[string]interface{}
-
-func (m myMap) String() string {
-	res := "{"
-	for k, v := range m {
-		res = fmt.Sprintf("%s%s: %s, ", res, k, v)
-	}
-	return fmt.Sprintf("%s}", res[:len(res)-2])
-}
-
-type mySlice []interface{}
-
-func (s mySlice) String() string {
-	res := "["
-	for _, v := range s {
-		res = fmt.Sprintf("%s %s, ", res, v)
-	}
-	return fmt.Sprintf("%s]", res[:len(res)-2])
-}
-
-var testInput = map[string]interface{}{
-	"k2":     "world",
-	"t1":     `{{ printf "hello-%s" .k2 }}`,
-	"t2":     `{{ .t1 }}{{ .t1 }}`,
-	"t3":     `{{ .t2 }} bla`,
-	"v4":     myMap{"v41": "test"},
-	"t4":     `{{ .v4 }}`,
-	"t5":     myMap{"t51": `{{ .t4 }}`},
-	"v5":     myMap{"v51": mySlice{"s1", "s2"}},
-	"normal": "value",
+`,
+		values: flatmap.YamlMap{
+			"v4":     flatmap.YamlMap{"v41": "test"},
+			"t4":     `{{ .v4 }}`,
+			"t5":     flatmap.YamlMap{"t51": `{{ .t4 }}`},
+			"normal": "value",
+		},
+		maxIt: 10,
+		res: `
+v4:
+	v41: test
+t4: {v41: test}
+t5:
+	t51: {v41: test}
+t6: {v41: test}
+normal: value
+`,
+		err: nil,
+	},
+	{
+		name: "nested slice insertion",
+		tmpl: `
+v5:
+	v51:
+	- s1
+	- s2
+t7: {{ .v5 }}
+`,
+		values: flatmap.YamlMap{
+			"v5": flatmap.YamlMap{"v51": flatmap.YamlSlice{"s1", "s2"}},
+		},
+		maxIt: 10,
+		res: `
+v5:
+	v51:
+	- s1
+	- s2
+t7: {v51: [s1, s2]}
+`,
+		err: nil,
+	},
+	{
+		name: "partial templating",
+		tmpl: `
+k2: world
+t1: {{ printf "hello-%s" .k2 }}
+t2: {{ .t1 }}{{ .t1 }}
+t3: {{ .t2 }} bla
+`,
+		values: flatmap.YamlMap{
+			"k2": "world",
+			"t1": `{{ printf "hello-%s" .k2 }}`,
+			"t2": `{{ .t1 }}{{ .t1 }}`,
+			"t3": `{{ .t2 }} bla`,
+		},
+		maxIt: 1,
+		res: `
+k2: world
+t1: hello-world
+t2: {{ printf "hello-%s" .k2 }}{{ printf "hello-%s" .k2 }}
+t3: {{ .t1 }}{{ .t1 }} bla
+`,
+		err: nil,
+	},
+	{
+		name: "invalid values",
+		tmpl: `
+k2: world
+t1: {{ printf "hello-%s" .k2 }}
+`,
+		values: "invalid input",
+		maxIt:  1,
+		res:    ``,
+		err:    fmt.Errorf("template: tmp_0:3:25: executing \"tmp_0\" at <.k2>: can't evaluate field k2 in type string"),
+	},
 }
 
 func TestRender(t *testing.T) {
-	templ := tmpl{}
-	templ.dataCurrent = []byte(testTmpl)
-	newMap := myMap(testInput)
-	templ.input = newMap
-	fmt.Println(newMap)
-	for templ.hasChanged() {
-		templ.render()
-		fmt.Println("it ", templ.iteration)
-		fmt.Println(templ.hasChanged())
-		fmt.Printf("err %v\n", templ.err)
-		fmt.Println("data", string(templ.dataCurrent))
-	}
-	var tr map[string]interface{}
 
-	err := yaml.Unmarshal(templ.dataCurrent, &tr)
-	if err != nil {
-		log.Fatalf("error: %v", err)
-	}
-	out, err := yaml.Marshal(tr)
-	if err != nil {
-		log.Fatalf("error: %v", err)
-	}
-	fmt.Printf("--- t:\n%v\n\n", string(out))
+	for _, test := range testValues {
+		fmt.Printf("test %s\n", test.name)
+		res := new(bytes.Buffer)
+		err := render.Recursive(
+			[]byte(test.tmpl),
+			test.values,
+			res,
+			test.maxIt,
+		)
+		if err != test.err {
+			if err.Error() != test.err.Error() {
+				t.Error(errOutput(
+					fmt.Sprintf("%s errpr", test.name),
+					err.Error(),
+					test.err.Error(),
+				))
+			}
+		}
+		if res.String() != test.res {
+			t.Error(errOutput(
+				fmt.Sprintf("%s result", test.name),
+				res.String(),
+				test.res,
+			))
+		}
 
+	}
 	t.FailNow()
 
+}
+
+func errOutput(name, result, expected string) error {
+	return fmt.Errorf("[MISMATCH] %s.\nResult: \"%s\" \nExpect: \"%s\"",
+		name, result, expected)
 }
