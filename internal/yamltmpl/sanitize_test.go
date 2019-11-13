@@ -74,17 +74,16 @@ func TestSanitize(t *testing.T) {
 			if err.Error() != test.errDesan.Error() {
 				t.Error(errOutput("error", err.Error(), test.errDesan.Error()))
 			}
-		} else {
-			if n := strings.Compare(string(resDesan), test.deSanitized); n != 0 {
-				t.Error(errOutput("desanitization", string(resDesan), test.deSanitized))
-			}
-			resDesanNewline := string(append(resDesan, '\n'))
-			if n := strings.Compare(resDesanNewline, debugDesan.String()); n != 0 {
-				t.Error(errOutput("debugging desanitization",
-					debugDesan.String(),
-					resDesanNewline,
-				))
-			}
+		}
+		if n := strings.Compare(string(resDesan), test.deSanitized); n != 0 {
+			t.Error(errOutput("desanitization", string(resDesan), test.deSanitized))
+		}
+		resDesanNewline := string(append(resDesan, '\n'))
+		if n := strings.Compare(resDesanNewline, debugDesan.String()); n != 0 {
+			t.Error(errOutput("debugging desanitization",
+				debugDesan.String(),
+				resDesanNewline,
+			))
 		}
 	}
 }
