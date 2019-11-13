@@ -99,7 +99,6 @@ func TestInflate(t *testing.T) {
 			t.Errorf("maps are not equal.\nResult: %+v \nExpect: %+v", res, test.res)
 		}
 	}
-	t.FailNow()
 }
 
 func errDiff(errExp, errRes error) bool {
