@@ -15,27 +15,10 @@ type tmpl struct {
 	iteration    uint
 }
 
-func NewTemplate(
-	template []byte,
-	input interface{},
-	output io.Writer,
-) (tmpl, error) {
-
-	// // TODO: implement optional check for cyclic references
-	// // potentially check on (flatInput map[string]flatmap.MapEntry)
-	// if cyclicReferences(flatInput) {
-	// 	return tmpl{}, fmt.Errorf("cyclic dependency in aggregated values")
-	// }
-
-	return tmpl{
-		err:          nil,
-		dataCurrent:  template,
-		dataPrevious: []byte{},
-		input:        input,
-		iteration:    0,
-	}, nil
-}
-
+// Recursive accepts a template and input for that template and renders
+// the template recursively with the input as values in each iteration.
+// The recursion stops when either no change happens in the rendered template anymore
+// or maxIterations is met.
 func Recursive(
 	template []byte,
 	input interface{},
@@ -50,7 +33,7 @@ func Recursive(
 		iteration:    0,
 	}
 
-	for t.hasChanged() || t.iteration < maxIterations {
+	for t.hasChanged() && t.iteration < maxIterations {
 		t.render()
 		if t.err != nil {
 			return t.err
