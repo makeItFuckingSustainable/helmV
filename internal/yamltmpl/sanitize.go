@@ -12,7 +12,12 @@ var keyIsTmpl = regexp.MustCompile(`({{.*}}.*:.*)`)
 var valIsTmpl = regexp.MustCompile(`(\w*: )({{.*}}.*)`)
 var sanTmpl = regexp.MustCompile("(\\w*: )'({{.*}}.*)'")
 
+// Sanitize takes a yaml-golang template in byte slice format transforms and
+// returns a sanitized yaml-file version of it also in byte slice format.
+// All values that are golang-templates in the input are transformed to strings
+// in the output.
 func Sanitize(input []byte, debug debug.Debugger) ([]byte, error) {
+	// TODO: transform input to *Scanner type
 	res := make([]byte, 0)
 	scanner := bufio.NewScanner(bytes.NewBuffer(input))
 	for scanner.Scan() {
@@ -38,6 +43,10 @@ func Sanitize(input []byte, debug debug.Debugger) ([]byte, error) {
 	return res[:len(res)-1], nil
 }
 
+// Desanitize reverts the action of Sanitize. It takes a yaml-file in byte slice
+// format and returns a yaml-golang template version of it also in byte slice format.
+// All values that are stringified golang-templates in the input are transformed
+// to actual golang-template values in the output.
 func Desanitize(input []byte, debug debug.Debugger) ([]byte, error) {
 	res := make([]byte, 0)
 	scanner := bufio.NewScanner(bytes.NewBuffer(input))
@@ -58,8 +67,4 @@ func Desanitize(input []byte, debug debug.Debugger) ([]byte, error) {
 		return []byte{}, err
 	}
 	return res[:len(res)-1], nil
-}
-
-func errTmplFormat(line string) error {
-	return fmt.Errorf("unexpected template format in line \"%s\"", line)
 }
