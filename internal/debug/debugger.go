@@ -2,12 +2,16 @@ package debug
 
 import "io"
 
+// Debugger is an interface that holds a debug mode flag (DoDebug) and a debugging
+// target (Writer) where the debug information is sent to
 type Debugger interface {
 	Write([]byte) error
 	DoDebug() bool
 }
 
-func New(debugger io.Writer, debugFlag bool) debug {
+// New constructs a Debugger from a Writer and a flag indicating whether
+// debug mode is enabled
+func New(debugger io.Writer, debugFlag bool) Debugger {
 	return debug{
 		writer:  debugger,
 		doDebug: debugFlag,
@@ -19,6 +23,7 @@ type debug struct {
 	doDebug bool
 }
 
+// Write implements the Write method on the Debugger Writer
 func (d debug) Write(dump []byte) error {
 	if _, err := d.writer.Write(dump); err != nil {
 		return err
@@ -26,6 +31,7 @@ func (d debug) Write(dump []byte) error {
 	return nil
 }
 
+// DoDebug returns a bool indicating whether debug mode is enabled
 func (d debug) DoDebug() bool {
 	if d.doDebug {
 		return true
