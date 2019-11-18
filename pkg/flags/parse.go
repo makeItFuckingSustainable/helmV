@@ -9,8 +9,10 @@ import (
 
 // CLIArgs holds all parsed cli flags
 type CLIArgs struct {
-	Files  []string
-	Output string
+	Files         []string
+	Output        string
+	MaxIterations uint
+	Debug         bool
 }
 
 // Parse evaluates the cli flags and parses them into CLIArgs
@@ -18,17 +20,39 @@ func Parse() (CLIArgs, error) {
 	result := CLIArgs{}
 	// TODO include log output
 	var f files
-	flag.Var(&f, "values", fmt.Sprintf("%s %s",
-		"Valid yaml file holding input values.",
-		"Multiple value files are processed first to last.",
-	))
-	flag.Var(&f, "v", fmt.Sprintf("%s %s %s",
-		"File holding input values.",
-		"Relative path will be changed to absolute path as \"${PWD}/filename\".",
-		"Multiple value files are processed first to last.",
-	))
-	flag.StringVar(&result.Output, "output", "",
-		"Absolute output path. Will default to \"${PWD}/values.yaml\".")
+	flag.Var(
+		&f,
+		"values",
+		fmt.Sprintf("%s %s",
+			"File holding input values.",
+			"Multiple value files are processed first to last.",
+		))
+	flag.Var(
+		&f,
+		"v",
+		fmt.Sprintf("%s %s %s",
+			"File holding input values.",
+			"Relative path will be changed to absolute path as \"${PWD}/filename\".",
+			"Multiple value files are processed first to last.",
+		))
+	flag.StringVar(
+		&result.Output,
+		"output",
+		"output.yaml",
+		"Absolute output path. Will default to \"${PWD}/values.yaml\".",
+	)
+	flag.UintVar(
+		&result.MaxIterations,
+		"max-iterations",
+		10,
+		"Maximal number of recursive iterations that helmV will execute.",
+	)
+	flag.BoolVar(
+		&result.Debug,
+		"debug",
+		false,
+		"Activate debugging.",
+	)
 	flag.Parse()
 
 	absFiles := make([]string, 0, len(f))
