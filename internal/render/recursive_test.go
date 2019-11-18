@@ -138,13 +138,8 @@ t3: {{ .t2 }} bla
 			"t3": `{{ .t2 }} bla`,
 		},
 		maxIt: 1,
-		res: `
-k2: world
-t1: hello-world
-t2: {{ printf "hello-%s" .k2 }}{{ printf "hello-%s" .k2 }}
-t3: {{ .t1 }}{{ .t1 }} bla
-`,
-		err: nil,
+		res:   ``,
+		err:   fmt.Errorf("rendering incomplete after 1 iteration (max iterations 1)"),
 	},
 	{
 		name: "invalid values",
@@ -156,6 +151,17 @@ t1: {{ printf "hello-%s" .k2 }}
 		maxIt:  1,
 		res:    ``,
 		err:    fmt.Errorf("template: tmp_0:3:25: executing \"tmp_0\" at <.k2>: can't evaluate field k2 in type string"),
+	},
+	{
+		name: "invalid template",
+		tmpl: `
+k2: world
+t1: {{ printf "hello-%s" .k2
+`,
+		values: flatmap.YamlMap{},
+		maxIt:  1,
+		res:    ``,
+		err:    fmt.Errorf("template: tmp_0:3: unclosed action"),
 	},
 }
 
@@ -170,15 +176,14 @@ func TestRender(t *testing.T) {
 			res,
 			test.maxIt,
 		)
-		if err != test.err {
-			if err.Error() != test.err.Error() {
-				t.Error(errOutput(
-					fmt.Sprintf("%s errpr", test.name),
-					err.Error(),
-					test.err.Error(),
-				))
-			}
+		if errDiff(test.err, err) {
+			t.Error(errOutput(
+				fmt.Sprintf("%s error", test.name),
+				err,
+				test.err,
+			))
 		}
+
 		if res.String() != test.res {
 			t.Error(errOutput(
 				fmt.Sprintf("%s result", test.name),
@@ -191,7 +196,23 @@ func TestRender(t *testing.T) {
 
 }
 
-func errOutput(name, result, expected string) error {
+func errOutput(name string, result, expected interface{}) error {
 	return fmt.Errorf("[MISMATCH] %s.\nResult: \"%s\" \nExpect: \"%s\"",
 		name, result, expected)
+}
+
+func errDiff(errExp, errRes error) bool {
+	if errExp == errRes {
+		return false
+	}
+	if errExp == nil && errRes != nil {
+		return true
+	}
+	if errExp != nil && errRes == nil {
+		return true
+	}
+	if errExp.Error() != errRes.Error() {
+		return true
+	}
+	return false
 }
