@@ -35,9 +35,17 @@ func Recursive(
 
 	for t.hasChanged() && t.iteration < maxIterations {
 		t.render()
-		if t.err != nil {
-			return t.err
-		}
+	}
+
+	if t.err != nil {
+		return t.err
+	}
+	if t.hasChanged() {
+		return fmt.Errorf(
+			"rendering incomplete after %v iteration (max iterations %v)",
+			t.iteration,
+			maxIterations,
+		)
 	}
 	_, err := output.Write(t.dataCurrent)
 	return err

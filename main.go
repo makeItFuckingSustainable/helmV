@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
+	"fmt"
 	"helmV/internal/cmd"
 	"helmV/internal/debug"
 	"helmV/pkg/flags"
@@ -11,21 +13,37 @@ import (
 
 func main() {
 
+	debugOutput := new(bytes.Buffer)
+	e := err{true, debugOutput}
 	args, err := flags.Parse()
-	check(err)
-	d := debug.New(new(bytes.Buffer), false)
-	infl, err := cmd.LoadInput(args.Files, d)
-	check(err)
-	res, err := os.Create("output.yaml")
-	check(err)
+	e.check(err)
+	d := debug.New(debugOutput, args.Debug)
+	e.debug = d.DoDebug()
 
-	check(cmd.RenderResult(infl, res, 10, d))
+	infl, err := cmd.LoadInput(args.Files, d)
+	e.check(err)
+	res, err := os.Create(args.Output)
+	e.check(err)
+
+	e.check(cmd.RenderResult(infl, res, args.MaxIterations, d))
 
 }
 
-func check(err error) {
+type err struct {
+	debug  bool
+	output *bytes.Buffer
+}
+
+func (e err) check(err error) {
 	// TODO add proper error and log handling
 	if err != nil {
+		if e.debug {
+			fmt.Println("")
+			scanner := bufio.NewScanner(e.output)
+			for scanner.Scan() {
+				log.Printf("DEBUG | %s\n", scanner.Text())
+			}
+		}
 		log.Fatalf("[ERROR] %s", err)
 	}
 }
