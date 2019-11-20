@@ -4,9 +4,9 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"helmV/internal/cmd"
-	"helmV/internal/debug"
-	"helmV/pkg/flags"
+	"github.com/makeItFuckingSustainable/helmV/internal/cmd"
+	"github.com/makeItFuckingSustainable/helmV/internal/debug"
+	"github.com/makeItFuckingSustainable/helmV/pkg/flags"
 	"log"
 	"os"
 )

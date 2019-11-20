@@ -2,9 +2,10 @@ package flatmap_test
 
 import (
 	"fmt"
-	"helmV/pkg/flatmap"
 	"reflect"
 	"testing"
+
+	"github.com/makeItFuckingSustainable/helmV/pkg/flatmap"
 )
 
 var testFlatten = []struct {

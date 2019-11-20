@@ -4,8 +4,9 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"helmV/internal/debug"
 	"regexp"
+
+	"github.com/makeItFuckingSustainable/helmV/internal/debug"
 )
 
 var keyIsTmpl = regexp.MustCompile(`({{.*}}.*:.*)`)

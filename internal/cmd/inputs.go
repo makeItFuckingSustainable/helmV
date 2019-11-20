@@ -3,10 +3,10 @@ package cmd
 import (
 	"bytes"
 	"fmt"
-	"helmV/internal/debug"
-	"helmV/internal/render"
-	"helmV/internal/yamltmpl"
-	"helmV/pkg/flatmap"
+	"github.com/makeItFuckingSustainable/helmV/internal/debug"
+	"github.com/makeItFuckingSustainable/helmV/internal/render"
+	"github.com/makeItFuckingSustainable/helmV/internal/yamltmpl"
+	"github.com/makeItFuckingSustainable/helmV/pkg/flatmap"
 	"io"
 	"io/ioutil"
 

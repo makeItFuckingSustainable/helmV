@@ -3,8 +3,8 @@ package render_test
 import (
 	"bytes"
 	"fmt"
-	"helmV/internal/render"
-	"helmV/pkg/flatmap"
+	"github.com/makeItFuckingSustainable/helmV/internal/render"
+	"github.com/makeItFuckingSustainable/helmV/pkg/flatmap"
 	"testing"
 )
 

@@ -3,10 +3,11 @@ package yamltmpl_test
 import (
 	"bytes"
 	"fmt"
-	"helmV/internal/debug"
-	"helmV/internal/yamltmpl"
 	"strings"
 	"testing"
+
+	"github.com/makeItFuckingSustainable/helmV/internal/debug"
+	"github.com/makeItFuckingSustainable/helmV/internal/yamltmpl"
 )
 
 var testValues = []struct {

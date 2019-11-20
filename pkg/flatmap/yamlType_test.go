@@ -1,8 +1,9 @@
 package flatmap_test
 
 import (
-	"helmV/pkg/flatmap"
 	"testing"
+
+	"github.com/makeItFuckingSustainable/helmV/pkg/flatmap"
 )
 
 var testYamlTypes = []struct {
