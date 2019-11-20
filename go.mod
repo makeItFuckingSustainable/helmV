@@ -1,4 +1,4 @@
-module helmV
+module github.com/makeItFuckingSustainable/helmV
 
 go 1.13
 
