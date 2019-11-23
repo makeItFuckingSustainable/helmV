@@ -1,29 +1,21 @@
-package cmd
+package helmV
 
 import (
 	"bytes"
-	"fmt"
-	"github.com/makeItFuckingSustainable/helmV/internal/debug"
+
 	"github.com/makeItFuckingSustainable/helmV/internal/render"
 	"github.com/makeItFuckingSustainable/helmV/internal/yamltmpl"
 	"github.com/makeItFuckingSustainable/helmV/pkg/flatmap"
-	"io"
-	"io/ioutil"
-
+	"github.com/makeItFuckingSustainable/helmV/pkg/logerrs"
 	"gopkg.in/yaml.v2"
 )
 
-func LoadInput(filePaths []string, d debug.Debugger) (
+func ParseFiles(files [][]byte, d logerrs.Debugger) (
 	flatmap.YamlMap,
 	error,
 ) {
 	aggMap := map[string]flatmap.MapEntry{}
-	for _, path := range filePaths {
-		f, err := ioutil.ReadFile(path)
-		if err != nil {
-			return flatmap.YamlMap{},
-				fmt.Errorf("cannot read file \"%s\" - error: %s", f, err)
-		}
+	for _, f := range files {
 		fSan, err := yamltmpl.Sanitize(f, d)
 		if err != nil {
 			return flatmap.YamlMap{}, err
@@ -52,33 +44,27 @@ func LoadInput(filePaths []string, d debug.Debugger) (
 	return infl, nil
 }
 
-func RenderResult(
+func Render(
 	infl flatmap.YamlMap,
-	output io.Writer,
 	maxIterations uint,
-	d debug.Debugger) error {
+	d logerrs.Debugger) ([]byte, error) {
 	inflBytes, err := yaml.Marshal(&infl)
 	if err != nil {
-		return err
+		return []byte{}, err
 	}
 	tmpl, err := yamltmpl.Desanitize(inflBytes, d)
 	if err != nil {
-		return err
+		return []byte{}, err
 	}
 	rendered := new(bytes.Buffer)
 	err = render.Recursive(tmpl, infl, rendered, maxIterations)
 	if err != nil {
-		return err
+		return []byte{}, err
 	}
 	var resParsed interface{}
 	err = yaml.Unmarshal(rendered.Bytes(), &resParsed)
 	if err != nil {
-		return err
+		return []byte{}, err
 	}
-	res, err := yaml.Marshal(resParsed)
-	if err != nil {
-		return err
-	}
-	_, err = output.Write(res)
-	return err
+	return yaml.Marshal(resParsed)
 }
