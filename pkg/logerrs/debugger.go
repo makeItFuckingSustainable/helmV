@@ -1,4 +1,4 @@
-package debug
+package logerrs
 
 import "io"
 
@@ -9,9 +9,9 @@ type Debugger interface {
 	DoDebug() bool
 }
 
-// New constructs a Debugger from a Writer and a flag indicating whether
+// NewDebugger constructs a Debugger from a Writer and a flag indicating whether
 // debug mode is enabled
-func New(debugger io.Writer, debugFlag bool) Debugger {
+func NewDebugger(debugger io.Writer, debugFlag bool) Debugger {
 	return debug{
 		writer:  debugger,
 		doDebug: debugFlag,
