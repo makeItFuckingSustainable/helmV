@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/makeItFuckingSustainable/helmV/internal/debug"
+	"github.com/makeItFuckingSustainable/helmV/pkg/logerrs"
 )
 
 var keyIsTmpl = regexp.MustCompile(`({{.*}}.*:.*)`)
@@ -17,7 +17,7 @@ var sanTmpl = regexp.MustCompile("(\\w*: )'({{.*}}.*)'")
 // returns a sanitized yaml-file version of it also in byte slice format.
 // All values that are golang-templates in the input are transformed to strings
 // in the output.
-func Sanitize(input []byte, debug debug.Debugger) ([]byte, error) {
+func Sanitize(input []byte, debug logerrs.Debugger) ([]byte, error) {
 	// TODO: transform input to *Scanner type
 	res := make([]byte, 0)
 	scanner := bufio.NewScanner(bytes.NewBuffer(input))
@@ -48,7 +48,7 @@ func Sanitize(input []byte, debug debug.Debugger) ([]byte, error) {
 // format and returns a yaml-golang template version of it also in byte slice format.
 // All values that are stringified golang-templates in the input are transformed
 // to actual golang-template values in the output.
-func Desanitize(input []byte, debug debug.Debugger) ([]byte, error) {
+func Desanitize(input []byte, debug logerrs.Debugger) ([]byte, error) {
 	res := make([]byte, 0)
 	scanner := bufio.NewScanner(bytes.NewBuffer(input))
 	for scanner.Scan() {

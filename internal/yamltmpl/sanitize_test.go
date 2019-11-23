@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/makeItFuckingSustainable/helmV/internal/debug"
 	"github.com/makeItFuckingSustainable/helmV/internal/yamltmpl"
+	"github.com/makeItFuckingSustainable/helmV/pkg/logerrs"
 )
 
 var testValues = []struct {
@@ -49,9 +49,9 @@ normal: value`,
 func TestSanitize(t *testing.T) {
 	for _, test := range testValues {
 		debugSan := new(bytes.Buffer)
-		d := debug.New(debugSan, true)
+		d := logerrs.NewDebugger(debugSan, true)
 		debugDesan := new(bytes.Buffer)
-		dOut := debug.New(debugDesan, true)
+		dOut := logerrs.NewDebugger(debugDesan, true)
 		res, err := yamltmpl.Sanitize([]byte(test.deSanitized), d)
 		if err != test.errSan {
 			if err.Error() != test.errSan.Error() {
