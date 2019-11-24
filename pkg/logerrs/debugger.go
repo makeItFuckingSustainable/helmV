@@ -38,3 +38,8 @@ func (d debug) DoDebug() bool {
 	}
 	return false
 }
+
+// SetDebugMode allows to change the debug mode (true or false)
+func (d *debug) SetDebugMode(mode bool) {
+	d.doDebug = mode
+}

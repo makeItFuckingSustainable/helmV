@@ -5,25 +5,27 @@ import (
 	"bytes"
 	"fmt"
 	"log"
-
 )
 
 type DebugErr interface {
 	Check(error)
+	Debugger() Debugger
 }
 
-func New(debugFlag bool) (DebugErr, Debugger) {
+func New(debugFlag bool) DebugErr {
 	debugOutput := new(bytes.Buffer)
 	d := NewDebugger(debugOutput, debugFlag)
 	return debugErr{
-		debug:  debugFlag,
-		output: debugOutput,
-	}, d
+		debug:    debugFlag,
+		output:   debugOutput,
+		debugger: d,
+	}
 }
 
 type debugErr struct {
-	debug  bool
-	output *bytes.Buffer
+	debug    bool
+	output   *bytes.Buffer
+	debugger Debugger
 }
 
 func (e debugErr) Check(err error) {
@@ -37,5 +39,12 @@ func (e debugErr) Check(err error) {
 			}
 		}
 		log.Fatalf("[ERROR] %s", err)
+	}
+}
+
+func (e debugErr) Debugger() Debugger {
+	return debug{
+		writer:  e.output,
+		doDebug: e.debug,
 	}
 }

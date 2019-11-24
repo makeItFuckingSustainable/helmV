@@ -2,7 +2,6 @@ package main
 
 import (
 	"io/ioutil"
-	"log"
 
 	"github.com/makeItFuckingSustainable/helmV/internal/cmd/cli"
 	"github.com/makeItFuckingSustainable/helmV/internal/cmd/helmV"
@@ -11,18 +10,17 @@ import (
 
 func main() {
 
+	e := logerrs.New(true)
 	args, err := cli.ParseArgs()
-	if err != nil {
-		log.Fatalf("[ERROR] %s", err)
-	}
-	e, d := logerrs.New(args.Debug)
+	e.Check(err)
+	e = logerrs.New(args.Debug)
 
 	files, err := cli.ReadFiles(args.Files)
 	e.Check(err)
 
-	infl, err := helmV.ParseFiles(files, d)
+	infl, err := helmV.ParseFiles(files, e.Debugger())
 	e.Check(err)
-	res, err := helmV.Render(infl, args.MaxIterations, d)
+	res, err := helmV.Render(infl, args.MaxIterations, e.Debugger())
 	e.Check(err)
 
 	e.Check(ioutil.WriteFile(args.Output, res, 0666))
