@@ -1,4 +1,4 @@
-[![Coverage Status](https://coveralls.io/repos/github/makeItFuckingSustainable/helmV/badge.png?branch=master)](https://coveralls.io/github/makeItFuckingSustainable/helmV?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/makeItFuckingSustainable/helmV/badge.svg?branch=master)](https://coveralls.io/github/makeItFuckingSustainable/helmV?branch=master)
 [![Build Status](https://travis-ci.com/makeItFuckingSustainable/helmV.svg?branch=master)](https://travis-ci.com/makeItFuckingSustainable/helmV)
 
 # helmV
