@@ -1,23 +1,38 @@
-package flags
+package cli
 
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 )
 
-// CLIArgs holds all parsed cli flags
-type CLIArgs struct {
+// ReadFiles iterates through all filePaths and parses the files to byte slices.
+func ReadFiles(filePaths []string) ([][]byte, error) {
+	res := make([][]byte, 0, len(filePaths))
+	for _, path := range filePaths {
+		f, err := ioutil.ReadFile(path)
+		if err != nil {
+			return [][]byte{},
+				fmt.Errorf("cannot read file \"%s\" - error: %s", f, err)
+		}
+		res = append(res, f)
+	}
+	return res, nil
+}
+
+// Args holds all parsed cli flags
+type Args struct {
 	Files         []string
 	Output        string
 	MaxIterations uint
 	Debug         bool
 }
 
-// Parse evaluates the cli flags and parses them into CLIArgs
-func Parse() (CLIArgs, error) {
-	result := CLIArgs{}
+// ParseArgs evaluates the cli flags and parses them into CLIArgs
+func ParseArgs() (Args, error) {
+	result := Args{}
 	// TODO include log output
 	var f files
 	flag.Var(
@@ -59,7 +74,7 @@ func Parse() (CLIArgs, error) {
 	for _, fileName := range f {
 		absFile, err := filepath.Abs(fileName)
 		if err != nil {
-			return CLIArgs{}, err
+			return Args{}, err
 		}
 		absFiles = append(absFiles, absFile)
 
@@ -68,11 +83,11 @@ func Parse() (CLIArgs, error) {
 
 	err := result.validateOutput()
 	if err != nil {
-		return CLIArgs{}, err
+		return Args{}, err
 	}
 	err = result.validateFiles()
 	if err != nil {
-		return CLIArgs{}, err
+		return Args{}, err
 	}
 	return result, nil
 }
@@ -88,7 +103,7 @@ func (f *files) Set(value string) error {
 	return nil
 }
 
-func (args *CLIArgs) validateOutput() error {
+func (args *Args) validateOutput() error {
 	if args.Output == "" {
 		cwd, err := os.Getwd()
 		if err != nil {
@@ -102,7 +117,7 @@ func (args *CLIArgs) validateOutput() error {
 	return nil
 }
 
-func (args *CLIArgs) validateFiles() error {
+func (args *Args) validateFiles() error {
 	for _, f := range args.Files {
 		if _, err := os.Stat(f); os.IsNotExist(err) {
 			return fmt.Errorf("value file path \"%s\" does not exist", f)
