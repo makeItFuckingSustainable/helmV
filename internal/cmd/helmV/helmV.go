@@ -10,33 +10,16 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type ErrDebug struct {
-	err   error
-	Debug string
-}
-
-func (e ErrDebug) Error() string {
-	return e.err.Error()
-}
-
-type HelmV interface {
-	Render([][]byte, uint) ([]byte, error)
-}
-
-func New(d logerrs.Debugger) HelmV {
-	return helmV{d}
-}
-
-type helmV struct {
-	debug logerrs.Debugger
-}
-
-func (h helmV) Render(files [][]byte, maxIt uint) ([]byte, error) {
-	infl, err := parseFiles(files, h.debug)
+// Render is the single exported function of the helmV package. Given a slice of
+// parsed input files, a maximal number of recursive iterations and a debugging logger
+// it renders a single resulting yaml file from all input files with all templates
+// executed.
+func Render(files [][]byte, maxIt uint, d logerrs.Debugger) ([]byte, error) {
+	infl, err := parseFiles(files, d)
 	if err != nil {
 		return []byte{}, err
 	}
-	return renderTmpl(infl, maxIt, h.debug)
+	return renderTmpl(infl, maxIt, d)
 }
 
 // parseFiles takes the parsed input files, sanitizes their content and aggregates

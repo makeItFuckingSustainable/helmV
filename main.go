@@ -18,8 +18,7 @@ func main() {
 	files, err := cli.ReadFiles(args.Files)
 	e.Check(err)
 
-	hV := helmV.New(e.Debugger())
-	res, err := hV.Render(files, args.MaxIterations)
+	res, err := helmV.Render(files, args.MaxIterations, e.Debugger())
 	e.Check(err)
 
 	e.Check(ioutil.WriteFile(args.Output, res, 0666))

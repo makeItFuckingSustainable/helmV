@@ -91,8 +91,7 @@ func TestParseFiles(t *testing.T) {
 	for _, test := range testValues {
 		fmt.Printf("test %s\n", test.name)
 		debugOutput := new(bytes.Buffer)
-		hV := helmV.New(logerrs.NewDebugger(debugOutput, true))
-		res, err := hV.Render(test.input, test.maxIterations)
+		res, err := helmV.Render(test.input, test.maxIterations, logerrs.NewDebugger(debugOutput, true))
 		if errDiff(test.err, err) {
 			t.Error(errOutput(
 				fmt.Sprintf("%s error", test.name),
