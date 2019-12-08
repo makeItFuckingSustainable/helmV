@@ -2,25 +2,34 @@ package flatmap
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 )
 
-// YamlMap implements a map that returns a map in valid yaml format when printed
+// YamlMap implements a map that returns an alphabetically ordered map
+// in valid yaml format when printed.
 type YamlMap map[string]interface{}
 
 func (m YamlMap) String() string {
 	res := make([]string, 0, len(m))
-	for k, v := range m {
-		res = append(res, fmt.Sprintf("%s: %s", k, v))
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		res = append(res, fmt.Sprintf("%s: %s", k, m[k]))
 	}
 	return fmt.Sprintf("{%s}", strings.Join(res, ", "))
 }
 
-// YamlSlice implements a slice that returns a slice in valid yaml format when printed
+// YamlSlice implements a slice that returns a slice in valid yaml format
+// when printed.
 type YamlSlice []interface{}
 
 func (s YamlSlice) String() string {
 	res := make([]string, 0, len(s))
+
 	for _, v := range s {
 		res = append(res, fmt.Sprintf("%s", v))
 	}

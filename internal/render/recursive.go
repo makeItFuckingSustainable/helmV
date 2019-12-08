@@ -7,14 +7,6 @@ import (
 	"text/template"
 )
 
-type tmpl struct {
-	err          error
-	dataCurrent  []byte
-	dataPrevious []byte
-	input        interface{}
-	iteration    uint
-}
-
 // Recursive accepts a template and input for that template and renders
 // the template recursively with the input as values in each iteration.
 // The recursion stops when either no change happens in the rendered template anymore
@@ -49,6 +41,14 @@ func Recursive(
 	}
 	_, err := output.Write(t.dataCurrent)
 	return err
+}
+
+type tmpl struct {
+	err          error
+	dataCurrent  []byte
+	dataPrevious []byte
+	input        interface{}
+	iteration    uint
 }
 
 func (t *tmpl) hasChanged() bool {

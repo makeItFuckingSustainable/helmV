@@ -10,16 +10,18 @@ import (
 type DebugErr interface {
 	Check(error)
 	Debugger() Debugger
+	SetDebugMode(mode bool)
 }
 
 func New(debugFlag bool) DebugErr {
 	debugOutput := new(bytes.Buffer)
 	d := NewDebugger(debugOutput, debugFlag)
-	return debugErr{
+	e := &debugErr{
 		debug:    debugFlag,
 		output:   debugOutput,
 		debugger: d,
 	}
+	return e
 }
 
 type debugErr struct {
@@ -42,9 +44,14 @@ func (e debugErr) Check(err error) {
 	}
 }
 
+func (e *debugErr) SetDebugMode(mode bool) {
+	e.debug = mode
+}
+
 func (e debugErr) Debugger() Debugger {
-	return debug{
+	d := &debug{
 		writer:  e.output,
 		doDebug: e.debug,
 	}
+	return d
 }

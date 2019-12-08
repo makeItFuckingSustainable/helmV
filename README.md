@@ -2,4 +2,7 @@
 [![Build Status](https://travis-ci.com/makeItFuckingSustainable/helmV.svg?branch=master)](https://travis-ci.com/makeItFuckingSustainable/helmV)
 
 # helmV
-This project makes go templating available within value of yaml files. In addition it allows to deep merge multiple yaml files into one.
+
+This project makes a naive version of go templating available within value of yaml
+files. In addition it allows to deep merge multiple yaml files into one single
+file.
