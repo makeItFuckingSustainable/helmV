@@ -7,15 +7,17 @@ import "io"
 type Debugger interface {
 	Write([]byte) error
 	DoDebug() bool
+	SetDebugMode(bool)
 }
 
 // NewDebugger constructs a Debugger from a Writer and a flag indicating whether
 // debug mode is enabled
 func NewDebugger(debugger io.Writer, debugFlag bool) Debugger {
-	return debug{
+	d := &debug{
 		writer:  debugger,
 		doDebug: debugFlag,
 	}
+	return d
 }
 
 type debug struct {
