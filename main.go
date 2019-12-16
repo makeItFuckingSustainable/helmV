@@ -2,25 +2,30 @@ package main
 
 import (
 	"io/ioutil"
+	"log"
 
 	"github.com/makeItFuckingSustainable/helmV/internal/cmd/cli"
 	"github.com/makeItFuckingSustainable/helmV/internal/cmd/helmV"
-	"github.com/makeItFuckingSustainable/helmV/pkg/logerrs"
 )
 
 func main() {
 
-	e := logerrs.New(true)
 	args, err := cli.ParseArgs()
-	e.Check(err)
-	e.SetDebugMode(args.Debug)
+	check(err)
 
 	files, err := cli.ReadFiles(args.Files)
-	e.Check(err)
+	check(err)
 
-	res, err := helmV.Render(files, args.MaxIterations, e.Debugger())
-	e.Check(err)
+	res, err := helmV.Render(files, args.MaxIterations, args.Debug)
+	check(err)
 
-	e.Check(ioutil.WriteFile(args.Output, res, 0666))
+	check(ioutil.WriteFile(args.Output, res, 0666))
 
+}
+
+func check(err error) {
+	// TODO add proper error and log handling
+	if err != nil {
+		log.Fatalf("[ERROR] %s", err)
+	}
 }
