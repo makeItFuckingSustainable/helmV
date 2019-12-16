@@ -1,12 +1,10 @@
 package helmV_test
 
 import (
-	"bytes"
 	"fmt"
 	"testing"
 
 	"github.com/makeItFuckingSustainable/helmV/internal/cmd/helmV"
-	"github.com/makeItFuckingSustainable/helmV/pkg/logerrs"
 )
 
 var testValues = []struct {
@@ -90,8 +88,7 @@ func TestParseFiles(t *testing.T) {
 
 	for _, test := range testValues {
 		fmt.Printf("test %s\n", test.name)
-		debugOutput := new(bytes.Buffer)
-		res, err := helmV.Render(test.input, test.maxIterations, logerrs.NewDebugger(debugOutput, true))
+		res, err := helmV.Render(test.input, test.maxIterations, false)
 		if errDiff(test.err, err) {
 			t.Error(errOutput(
 				fmt.Sprintf("%s error", test.name),
