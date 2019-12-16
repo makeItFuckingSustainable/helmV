@@ -53,7 +53,7 @@ func ParseArgs() (Args, error) {
 	flag.StringVar(
 		&result.Output,
 		"output",
-		"output.yaml",
+		"values.yaml",
 		"Absolute output path. Will default to \"${PWD}/values.yaml\".",
 	)
 	flag.UintVar(
