@@ -23,7 +23,7 @@ func Sanitize(input []byte) ([]byte, error) {
 		if len(keyIsTmpl.FindAll(line, -1)) > 0 {
 			return res, fmt.Errorf("illegal key found in line \"%s\"", line)
 		}
-		// stringify all occurances of template inputs
+		// stringify all occurrences of template inputs
 		matchTmpl := valIsTmpl.ReplaceAll(line, []byte("${1}'${2}'"))
 		matchTmpl = append(matchTmpl, '\n')
 		res = append(res, matchTmpl...)
