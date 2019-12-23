@@ -26,7 +26,7 @@ var testFlatten = []struct {
 	{
 		in: map[string]interface{}{
 			"a": map[string]interface{}{
-				"b": map[string]interface{}{
+				"b": map[interface{}]interface{}{
 					"c": "val",
 				}}},
 		res: map[string]flatmap.MapEntry{
