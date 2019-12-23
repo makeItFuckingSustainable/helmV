@@ -5,8 +5,6 @@ import (
 	"bytes"
 	"fmt"
 	"regexp"
-
-	"github.com/makeItFuckingSustainable/helmV/pkg/logerrs"
 )
 
 var keyIsTmpl = regexp.MustCompile(`({{.*}}.*:.*)`)
@@ -17,29 +15,21 @@ var sanTmpl = regexp.MustCompile("(\\w*: )'({{.*}}.*)'")
 // returns a sanitized yaml-file version of it also in byte slice format.
 // All values that are golang-templates in the input are transformed to strings
 // in the output.
-func Sanitize(input []byte, debug logerrs.Debugger) ([]byte, error) {
-	// TODO: transform input to *Scanner type
+func Sanitize(input []byte) ([]byte, error) {
 	res := make([]byte, 0)
 	scanner := bufio.NewScanner(bytes.NewBuffer(input))
 	for scanner.Scan() {
 		line := scanner.Bytes()
 		if len(keyIsTmpl.FindAll(line, -1)) > 0 {
-			return []byte{}, fmt.Errorf(
-				"illegal key found in line \"%s\"", line,
-			)
+			return res, fmt.Errorf("illegal key found in line \"%s\"", line)
 		}
-		// stringify all occurances of template inputs
+		// stringify all occurrences of template inputs
 		matchTmpl := valIsTmpl.ReplaceAll(line, []byte("${1}'${2}'"))
 		matchTmpl = append(matchTmpl, '\n')
-		if debug.DoDebug() {
-			if err := debug.Write(matchTmpl); err != nil {
-				return []byte{}, err
-			}
-		}
 		res = append(res, matchTmpl...)
 	}
 	if err := scanner.Err(); err != nil {
-		return []byte{}, err
+		return res, err
 	}
 	return res[:len(res)-1], nil
 }
@@ -48,7 +38,7 @@ func Sanitize(input []byte, debug logerrs.Debugger) ([]byte, error) {
 // format and returns a yaml-golang template version of it also in byte slice format.
 // All values that are stringified golang-templates in the input are transformed
 // to actual golang-template values in the output.
-func Desanitize(input []byte, debug logerrs.Debugger) ([]byte, error) {
+func Desanitize(input []byte) ([]byte, error) {
 	res := make([]byte, 0)
 	scanner := bufio.NewScanner(bytes.NewBuffer(input))
 	for scanner.Scan() {
@@ -56,16 +46,11 @@ func Desanitize(input []byte, debug logerrs.Debugger) ([]byte, error) {
 		// revert stringification of all template inputs
 		matchTmpl := sanTmpl.ReplaceAll(line, []byte("${1}${2}"))
 		matchTmpl = append(matchTmpl, '\n')
-		if debug.DoDebug() {
-			if err := debug.Write(matchTmpl); err != nil {
-				return []byte{}, err
-			}
-		}
 		res = append(res, matchTmpl...)
 	}
 
 	if err := scanner.Err(); err != nil {
-		return []byte{}, err
+		return res, err
 	}
 	return res[:len(res)-1], nil
 }

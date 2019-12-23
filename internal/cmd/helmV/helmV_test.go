@@ -1,12 +1,11 @@
 package helmV_test
 
 import (
-	"bytes"
+	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/makeItFuckingSustainable/helmV/internal/cmd/helmV"
-	"github.com/makeItFuckingSustainable/helmV/pkg/logerrs"
 )
 
 var testValues = []struct {
@@ -17,6 +16,41 @@ var testValues = []struct {
 	err           error
 }{
 	{
+		name: "illegal key template",
+		input: [][]byte{
+			[]byte(`t2: {{ .t1 }}{{ .t1 }}
+{{ .illegal }}: {{ printf "%s" .k2 }}
+t3: {{ .t1 }}{{ .t1 }} additional text
+normal: value`),
+		},
+		maxIterations: 1,
+		res:           []byte{},
+		err:           errors.New("illegal key found in line \"{{ .illegal }}: {{ printf \"%s\" .k2 }}\""),
+	},
+	{
+		name: "illegal value",
+		input: [][]byte{
+			[]byte(`k1: v1
+illegalValue: {`),
+		},
+		maxIterations: 1,
+		res:           []byte{},
+		err:           errors.New("yaml: line 2: did not find expected node content"),
+	},
+	{
+		name: "incomplete rendering",
+		input: [][]byte{
+			[]byte(`t1: '{{ printf "%s" .k2 }}'
+t2: '{{ .t1 }}{{ .t1 }}'
+t3: '{{ .t1 }}{{ .t1 }} bla'
+normal: value`),
+		},
+		maxIterations: 1,
+		res:           []byte{},
+		err:           errors.New("rendering incomplete after 1 iteration (max iterations 1)"),
+	},
+	{
+		name: "merge & templating",
 		input: [][]byte{
 			[]byte(`k1: v1
 k2: v2
@@ -66,23 +100,7 @@ t1: v2n
 t2: v2nv2n
 t3: v2nv2n bla
 `),
-		// 		res: flatmap.YamlMap{
-		// 			"k1": "v1",
-		// 			"k2": "v2n",
-		// 			"k3": flatmap.YamlMap{
-		// 				"k31": "v31",
-		// 				"k32": flatmap.YamlMap{
-		// 					"k321": flatmap.YamlSlice{"k3211n", "k3212n"},
-		// 					"k322": flatmap.YamlSlice{"s3221", "s3222"},
-		// 					"k323": `bla
-		// blub
-		// blee`,
-		// 				}},
-		// 			"normal": "value",
-		// 			"t1":     `{{ printf "%s" .k2 }}`,
-		// 			"t2":     `{{ .t1 }}{{ .t1 }}`,
-		// 			"t3":     `{{ .t1 }}{{ .t1 }} bla`,
-		// 		},
+		err: nil,
 	},
 }
 
@@ -90,8 +108,7 @@ func TestParseFiles(t *testing.T) {
 
 	for _, test := range testValues {
 		fmt.Printf("test %s\n", test.name)
-		debugOutput := new(bytes.Buffer)
-		res, err := helmV.Render(test.input, test.maxIterations, logerrs.NewDebugger(debugOutput, true))
+		res, err := helmV.Render(test.input, test.maxIterations, true)
 		if errDiff(test.err, err) {
 			t.Error(errOutput(
 				fmt.Sprintf("%s error", test.name),
@@ -101,8 +118,8 @@ func TestParseFiles(t *testing.T) {
 		}
 
 		if len(res) != len(test.res) {
-			fmt.Println(res)
-			fmt.Println(test.res)
+			fmt.Println(string(res))
+			fmt.Println(string(test.res))
 			t.Error(errOutput(
 				fmt.Sprintf("%s result", test.name),
 				string(res),

@@ -1,13 +1,11 @@
 package yamltmpl_test
 
 import (
-	"bytes"
 	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/makeItFuckingSustainable/helmV/internal/yamltmpl"
-	"github.com/makeItFuckingSustainable/helmV/pkg/logerrs"
 )
 
 var testValues = []struct {
@@ -15,6 +13,7 @@ var testValues = []struct {
 	sanitized   string
 	errSan      error
 	errDesan    error
+	bijective   bool
 }{
 	{
 		deSanitized: `t1: {{ printf "%s" .k2 }}
@@ -27,65 +26,50 @@ t2: '{{ .t1 }}{{ .t1 }}'
 t3: '{{ .t1 }}{{ .t1 }} additional text'
 normal: value
 another: normal value`,
-		errSan:   nil,
-		errDesan: nil,
+		errSan:    nil,
+		errDesan:  nil,
+		bijective: true,
 	},
 	{
-		deSanitized: `{{ .illegal }}: {{ printf "%s" .k2 }}
-t2: {{ .t1 }}{{ .t1 }}
+		deSanitized: `t2: {{ .t1 }}{{ .t1 }}
+{{ .illegal }}: {{ printf "%s" .k2 }}
 t3: {{ .t1 }}{{ .t1 }} additional text
 normal: value`,
-		sanitized: `{{ .illegal }}: '{{ printf "%s" .k2 }}'
-t2: '{{ .t1 }}{{ .t1 }}'
-t3: '{{ .t1 }}{{ .t1 }} additional text'
-normal: value`,
+		sanitized: `t2: '{{ .t1 }}{{ .t1 }}'
+`,
 		errSan: fmt.Errorf("illegal key found in line \"%s\"",
 			`{{ .illegal }}: {{ printf "%s" .k2 }}`,
 		),
-		errDesan: nil,
+		errDesan:  nil,
+		bijective: false,
 	},
 }
 
 func TestSanitize(t *testing.T) {
 	for _, test := range testValues {
-		debugSan := new(bytes.Buffer)
-		d := logerrs.NewDebugger(debugSan, true)
-		debugDesan := new(bytes.Buffer)
-		dOut := logerrs.NewDebugger(debugDesan, true)
-		res, err := yamltmpl.Sanitize([]byte(test.deSanitized), d)
+		res, err := yamltmpl.Sanitize([]byte(test.deSanitized))
 		if err != test.errSan {
 			if err.Error() != test.errSan.Error() {
 				t.Error(errOutput("error", err.Error(), test.errSan.Error()))
 			}
-		} else {
-			if n := strings.Compare(string(res), test.sanitized); n != 0 {
-				t.Error(errOutput("sanitization", string(res), test.sanitized))
-			}
-			resNewline := string(append(res, '\n'))
-			if n := strings.Compare(resNewline, debugSan.String()); n != 0 {
-				t.Error(errOutput("debugging sanitization",
-					debugSan.String(),
-					resNewline,
-				))
-			}
 		}
 
-		resDesan, err := yamltmpl.Desanitize([]byte(test.sanitized), dOut)
+		if n := strings.Compare(string(res), test.sanitized); n != 0 {
+			t.Error(errOutput("sanitization", string(res), test.sanitized))
+		}
+
+		resDesan, err := yamltmpl.Desanitize([]byte(test.sanitized))
 		if err != test.errDesan {
 			if err.Error() != test.errDesan.Error() {
 				t.Error(errOutput("error", err.Error(), test.errDesan.Error()))
 			}
 		}
-		if n := strings.Compare(string(resDesan), test.deSanitized); n != 0 {
-			t.Error(errOutput("desanitization", string(resDesan), test.deSanitized))
+		if test.bijective {
+			if n := strings.Compare(string(resDesan), test.deSanitized); n != 0 {
+				t.Error(errOutput("desanitization", string(resDesan), test.deSanitized))
+			}
 		}
-		resDesanNewline := string(append(resDesan, '\n'))
-		if n := strings.Compare(resDesanNewline, debugDesan.String()); n != 0 {
-			t.Error(errOutput("debugging desanitization",
-				debugDesan.String(),
-				resDesanNewline,
-			))
-		}
+
 	}
 }
 
