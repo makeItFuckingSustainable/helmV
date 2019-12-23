@@ -118,8 +118,6 @@ func TestParseFiles(t *testing.T) {
 		}
 
 		if len(res) != len(test.res) {
-			fmt.Println(string(res))
-			fmt.Println(string(test.res))
 			t.Error(errOutput(
 				fmt.Sprintf("%s result", test.name),
 				string(res),
