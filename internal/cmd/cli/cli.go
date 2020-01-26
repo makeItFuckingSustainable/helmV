@@ -38,8 +38,9 @@ func ParseArgs() (Args, error) {
 	flag.Var(
 		&f,
 		"values",
-		fmt.Sprintf("%s %s",
+		fmt.Sprintf("%s %s %s",
 			"File holding input values.",
+			"Relative path will be changed to absolute path as \"${PWD}/filename\".",
 			"Multiple value files are processed first to last.",
 		))
 	flag.Var(
