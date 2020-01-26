@@ -40,21 +40,21 @@ func Render(files [][]byte, maxIt uint, debug bool) (
 
 // parseFiles takes the parsed input files, sanitizes their content and aggregates
 // them into a single YamlMap which is returned.
-func parseFiles(files [][]byte) (flatmap.YamlMap, []byte, error) {
+func parseFiles(files [][]byte) (map[string]flatmap.MapEntry, []byte, error) {
 	aggMap := map[string]flatmap.MapEntry{}
 	for _, f := range files {
 		fSan, err := yamltmpl.Sanitize(f)
 		if err != nil {
-			return flatmap.YamlMap{}, fSan, err
+			return map[string]flatmap.MapEntry{}, fSan, err
 		}
 		y := map[string]interface{}{}
 		if err := yaml.Unmarshal(fSan, &y); err != nil {
-			return flatmap.YamlMap{}, fSan, err
+			return map[string]flatmap.MapEntry{}, fSan, err
 		}
 
 		fm, err := flatmap.Flatten(y)
 		if err != nil {
-			return flatmap.YamlMap{}, []byte{}, err
+			return map[string]flatmap.MapEntry{}, []byte{}, err
 		}
 
 		// merge results in flat map
@@ -63,19 +63,19 @@ func parseFiles(files [][]byte) (flatmap.YamlMap, []byte, error) {
 		}
 	}
 
-	infl, err := flatmap.Inflate(aggMap)
-	if err != nil {
-		return flatmap.YamlMap{}, []byte{}, err
-	}
-
-	return infl, []byte{}, nil
+	return aggMap, []byte{}, nil
 }
 
 // Render is the main function of helmV. It takes a YamlMap as input and orchestrates
 // the data preparation and execution of the recursive template rendering process.
-func renderTmpl(infl flatmap.YamlMap, maxIterations uint) (
+func renderTmpl(aggMap map[string]flatmap.MapEntry, maxIterations uint) (
 	[]byte, []byte, error,
 ) {
+	infl, err := flatmap.Inflate(aggMap)
+	if err != nil {
+		return []byte{}, []byte{}, err
+	}
+
 	inflBytes, err := yaml.Marshal(&infl)
 	if err != nil {
 		return []byte{}, nil, err
@@ -84,6 +84,15 @@ func renderTmpl(infl flatmap.YamlMap, maxIterations uint) (
 	if err != nil {
 		return []byte{}, tmpl, err
 	}
+
+	// Merge nested flat map keys into input YamlMap. This allows to also access
+	// subkeys in templates.
+	for k, v := range aggMap {
+		if _, exists := infl[k]; !exists {
+			infl[k] = v
+		}
+	}
+
 	rendered := new(bytes.Buffer)
 	err = render.Recursive(tmpl, infl, rendered, maxIterations)
 	if err != nil {

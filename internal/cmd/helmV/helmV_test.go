@@ -73,8 +73,9 @@ k3:
     k323: |
       bla
       blub
-      blee`),
-			[]byte(`t1: '{{ printf "%s" .k2 }}'
+      blee
+    k333: v333`),
+			[]byte(`t1: '{{ printf "%s" .k3.k32.k333 }}'
 t2: '{{ .t1 }}{{ .t1 }}'
 t3: '{{ .t1 }}{{ .t1 }} bla'
 normal: value`),
@@ -91,14 +92,15 @@ k3:
     k322:
     - s3221
     - s3222
-    k323: |-
+    k323: |
       bla
       blub
       blee
+    k333: v333
 normal: value
-t1: v2n
-t2: v2nv2n
-t3: v2nv2n bla
+t1: v333
+t2: v333v333
+t3: v333v333 bla
 `),
 		err: nil,
 	},
